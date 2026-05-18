@@ -16,7 +16,7 @@ data saved as FirebaseID /
 
 // constants
 const redirectURL = "https://app.prolific.com/submissions/complete?cc=C1P1YP97"
-const numTrial = 5;
+const numTrial = 50;
 
 
 const studyId = "ai4nat";
