@@ -1,0 +1,281 @@
+import {
+    finalizeBlockRandomization,
+    firebaseUserId,
+    writeRealtimeDatabase,
+    writeURLParameters
+} from "./firebasepsych.js";
+
+console.log(firebaseUserId);
+
+/*
+data saved as FirebaseID /
+1. pid: Prolific URL parameters
+2. exp: experiment-wide data
+3. trial: trial data
+*/
+
+// constants
+const redirectURL = "https://app.prolific.com/submissions/complete?cc=C1P1YP97"
+const numTrial = 5;
+
+
+const studyId = "ai4nat";
+const dbPath = studyId + '/participantData/' + firebaseUserId + "/";
+
+const expData = {};
+
+// variables
+let isIntro
+let aiData
+let trialData
+
+let curTrial = 1;
+let curScore = 0;
+
+// consent
+const consent = document.querySelector('.consent');
+const consentCheckbox = document.querySelector('.consentCheckbox');
+const startButton = document.querySelector('.startButton');
+
+// experiment
+const experiment = document.querySelector('.experiment');
+const trial = document.querySelector('.trial');
+const score = document.querySelector('.score');
+const question = document.querySelector('.question');
+
+const aiForm = document.querySelector('.aiForm');
+
+const humanForm = document.querySelector('.humanForm');
+const humanSubmit = document.querySelector('.humanSubmit');
+
+const imageDisplay = document.querySelector('.imageDisplay');
+const questionCat = document.querySelector('.questionCat');
+
+// complete
+const complete = document.querySelector(".complete")
+
+const commentDisplay = document.querySelector(".commentDisplay");
+const commentField = document.getElementById("commentField");
+const commentSubmit = document.querySelector(".commentSubmit")
+
+const redirectDisplay = document.querySelector(".redirectDisplay");
+const redirectButton = document.querySelector(".redirectButton");
+
+
+// helpers
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const timePassed = () => Math.round(performance.now())
+
+
+const getData = async () => {
+    try {
+        const response = await fetch(dataPath);
+        if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+        }
+
+        aiData = await response.json();
+    } catch (error) {
+        console.error(error.message);
+    }
+};
+
+const setData = () => {
+    trialData = structuredClone(aiData[curTrial - 1]);
+    trialData.trial = curTrial;
+
+    trialData.aiCnf = Math.round(trialData.aiCnf * 10) * 10;
+    // console.log(trialData);
+}
+
+const resetTrial = async () => {
+    trialData.startTime = timePassed()
+
+    aiForm.reset()
+    humanForm.reset()
+
+    humanSubmit.disabled = true;
+
+    setData()
+
+    questionCat.textContent = trialData.aiAns;
+    imageDisplay.src = trialData.path;
+
+    document.getElementById(`ai${trialData.aiCnf}`).checked = true;
+}
+
+// events
+consentCheckbox.onchange = () => {
+    startButton.disabled = !consentCheckbox.checked;
+};
+
+// onboarding
+startButton.onclick = async () => {
+    expData.startTime = Date.now();
+    await writeRealtimeDatabase(dbPath + "/exp", expData);
+
+    consent.classList.add("d-none");
+    experiment.classList.remove("d-none");
+
+    isIntro = true;
+    await resetTrial();
+
+    introJs().setOptions({
+        exitOnEsc: false, exitOnOverlayClick: false,
+        showBullets: false, keyboardNavigation: false,
+
+        steps: [{
+            title: 'Welcome',
+            intro: '<p>We aim to study the way humans verify artificial intelligence (AI).</p>' +
+                '<p>Your results will help us design safer AI.</p>'
+        }, {
+            title: 'Objective',
+            element: question,
+            intro: '<p>The AI will identify a plant species shown in the image.</p>' +
+                '<p>Your aim is to judge whether the AI is correct or wrong.</p>'
+        }, {
+            title: 'Stimulus',
+            element: imageDisplay,
+            intro: '<p>The image shown is photographed in the wild.</p>' +
+                '<p>It depicts a plant species.</p>'
+        }, {
+            title: 'AI',
+            intro: '<p>Note that the AI is trained on images taken in the lab rather than in the wild.</p>' +
+                '<p>Therefore, it may often be wrong.</p>'
+        }, {
+            title: 'Answer',
+            element: aiForm,
+            intro: '<p>The AI will give you its answer and confidence.</p>' +
+                '<p>How certain the AI is indicated by its confidence (between 0% and 100%).</p>',
+        }, {
+            title: 'Judge',
+            element: humanForm,
+            intro: '<p>Judge whether the AI\'s answer is correct or wrong.</p>' +
+                '<p>Indicate the confidence in your judgment (between 0% and 100%). Then click submit.</p>'
+        }, {
+            title: 'Feedback',
+            intro: '<p>Judge the AI correctly, and you will gain 1 point.</p>' +
+                '<p>If you are wrong, no points will be deducted.</p>'
+        }, {
+            title: 'Bonus',
+            intro: '<p>Every point earns you a $0.01 bonus.</p>' +
+                '<p>Get all 50 trials correct, and you will earn a total bonus of $0.50!</p>'
+        }, {
+            title: 'Trial',
+            element: trial,
+            intro: '<p>The progress will be shown on the top left.</p>' +
+                '<p>It shows the number of trials completed/total trials.</p>'
+        }, {
+            title: 'Score',
+            element: score,
+            intro: '<p>Your score will be shown on the top right.</p>' +
+                '<p>It shows the number of correct trials/completed trials.</p>'
+        }, {
+            title: 'Start',
+            intro: '<p>Let\'s begin the experiment. Earn up to $0.50 bonus!</p>',
+        }, {
+            title: 'Reminder',
+            intro: '<p>Use the <strong>AI\'s answer and its confidence level</strong> to decide if the AI is correct or wrong.</p>'
+        }]
+    }).oncomplete(() => {
+        isIntro = false;
+        resetTrial();
+    }).start();
+}
+
+humanForm.oninput = () => {
+    humanSubmit.disabled = !humanForm.checkValidity();
+}
+
+humanForm.onsubmit = async event => {
+    trialData.humanTime = timePassed()
+    event.preventDefault();
+
+    if (!isIntro) {
+        let humanAns = document.querySelector('input[name="humanAns"]:checked').value;
+        trialData.humanAns = humanAns;
+
+        trialData.humanCnf = document.querySelector('input[name="huCnf"]:checked').value;
+
+        let title
+        let descr
+
+        let aiCor = trialData.aiCor
+        let aiCorTxt = aiCor ? "correct" : "wrong"
+
+        if ((aiCor && humanAns === "yes") || (!aiCor && humanAns === "no")) {
+            curScore++
+            trialData.correct = true
+
+            title = "&#x2714; You're Correct!"
+            descr = `<p>Yes, the AI was ${aiCorTxt}. Your score increased by 1!</p>` +
+                `<p>Total bonus is $${(curScore / 100).toFixed(2)} &#127881;</p>`
+        } else {
+            trialData.correct = false
+
+            title = "&#x2718; You're Wrong"
+            descr = `<p>No, the AI was ${aiCorTxt}.</p>`
+        }
+
+        score.textContent = `Score: ${curScore}/${curTrial} (${Math.round(curScore / curTrial * 100)}%)`;
+        trialData.endTime = timePassed()
+
+        // console.log(trialData);
+        await writeRealtimeDatabase(dbPath + '/trial/' + curTrial, trialData);
+
+        introJs().setOptions({
+            exitOnEsc: false, exitOnOverlayClick: false, showBullets: false, keyboardNavigation: false, steps: [{
+                title: title, intro: descr
+            }]
+        }).oncomplete(() => {
+            curTrial++
+            trial.textContent = `Trial: ${curTrial}/${numTrial} (${Math.round(curTrial / numTrial * 100)}%)`;
+
+            if (curTrial <= numTrial) {
+                resetTrial()
+
+            } else {
+                expData.score = curScore;
+
+                experiment.classList.add("d-none");
+                complete.classList.remove("d-none");
+            }
+        }).start();
+    }
+}
+
+commentSubmit.onclick = async () => {
+    expData.comment = commentField.value;
+    expData.endTime = Date.now();
+
+    await writeRealtimeDatabase(dbPath + "/exp", expData);
+    console.log("Wrote to database");
+
+    await finalizeBlockRandomization(studyId, "ai")
+
+    commentDisplay.classList.add("d-none");
+    redirectDisplay.classList.remove("d-none");
+
+    await sleep(2000);
+    window.location.replace(redirectURL)
+}
+
+redirectButton.onclick = () => {
+    window.location.replace(redirectURL)
+}
+
+// initialize
+writeURLParameters(dbPath + '/pid')
+
+// const condition = await blockRandomization(studyId, "ai", 4, 32, 1)
+// expData.condition = condition[0];
+
+expData.condition = 0
+
+const dataPath = `data${expData.condition}.json`;
+console.log(expData.condition);
+
+getData().then(() => setData())
+
+trial.textContent = `Trial: 1/${numTrial} (${Math.round(1 / numTrial * 100)}%)`;
+score.textContent = `Score: 0/0 (0%)`;
