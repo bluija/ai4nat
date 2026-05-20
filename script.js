@@ -15,9 +15,17 @@ data saved as FirebaseID /
 */
 
 // constants
+const cat1Sup = "Plants"
+const cat2Sup = "Fungi"
+
+const cat1Emj = "🌱"
+const cat2Emj = "🍄‍"
+
+const cat1Clr = "success"
+const cat2Clr = "secondary"
+
 const redirectURL = "https://app.prolific.com/submissions/complete?cc=C1P1YP97"
 const numTrial = 50;
-
 
 const studyId = "ai4nat";
 const dbPath = studyId + '/participantData/' + firebaseUserId + "/";
@@ -61,6 +69,10 @@ const commentSubmit = document.querySelector(".commentSubmit")
 const redirectDisplay = document.querySelector(".redirectDisplay");
 const redirectButton = document.querySelector(".redirectButton");
 
+const catEmjQ = document.querySelector(".catEmjQ");
+const catEmjR = document.querySelector(".catEmjR");
+const mainDisplay = document.querySelector(".mainDisplay");
+
 
 // helpers
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -75,28 +87,40 @@ const getData = async () => {
         }
 
         aiData = await response.json();
+        aiData = _.shuffle(aiData);
+
+        // console.log(aiData);
     } catch (error) {
         console.error(error.message);
     }
 };
 
-const setData = () => {
-    trialData = structuredClone(aiData[curTrial - 1]);
-    trialData.trial = curTrial;
-
-    trialData.aiCnf = Math.round(trialData.aiCnf * 10) * 10;
-    // console.log(trialData);
-}
 
 const resetTrial = async () => {
+    trialData = structuredClone(aiData[curTrial - 1]);
     trialData.startTime = timePassed()
+
+    trialData.trial = curTrial;
+    trialData.aiCnf = Math.round(trialData.aiCnf * 10) * 10;
+
+    // console.log(trialData);
 
     aiForm.reset()
     humanForm.reset()
 
     humanSubmit.disabled = true;
 
-    setData()
+    if (trialData.cat === cat1Sup) {
+        catEmjQ.textContent = cat1Emj;
+        catEmjR.textContent = cat1Emj;
+        mainDisplay.classList.replace(`text-bg-${cat2Clr}`, `text-bg-${cat1Clr}`)
+    } else {
+        console.assert(trialData.cat === cat2Sup);
+
+        catEmjQ.textContent = cat2Emj;
+        catEmjR.textContent = cat2Emj;
+        mainDisplay.classList.replace(`text-bg-${cat1Clr}`, `text-bg-${cat2Clr}`)
+    }
 
     questionCat.textContent = trialData.aiAns;
     imageDisplay.src = trialData.path;
@@ -129,15 +153,19 @@ startButton.onclick = async () => {
             intro: '<p>We aim to study the way humans verify artificial intelligence (AI).</p>' +
                 '<p>Your results will help us design safer AI.</p>'
         }, {
+            title: 'Alert',
+            intro: '<p><strong>Do not use any external AI</strong> in the experiment.</p>' +
+                '<p>Use only the provided AI.</p>'
+        }, {
             title: 'Objective',
             element: question,
-            intro: '<p>The AI will identify a plant species shown in the image.</p>' +
+            intro: '<p>The AI will identify the species in the image.</p>' +
                 '<p>Your aim is to judge whether the AI is correct or wrong.</p>'
         }, {
             title: 'Stimulus',
             element: imageDisplay,
             intro: '<p>The image shown is photographed in the wild.</p>' +
-                '<p>It depicts a plant species.</p>'
+                '<p>It depicts a naturally occurring species.</p>'
         }, {
             title: 'AI',
             intro: '<p>Note that the AI is trained on images taken in the lab rather than in the wild.</p>' +
@@ -151,7 +179,7 @@ startButton.onclick = async () => {
             title: 'Judge',
             element: humanForm,
             intro: '<p>Judge whether the AI\'s answer is correct or wrong.</p>' +
-                '<p>Indicate the confidence in your judgment (between 0% and 100%). Then click submit.</p>'
+                '<p>Indicate the confidence in your judgment (between 0% and 100%) and click submit.</p>'
         }, {
             title: 'Feedback',
             intro: '<p>Judge the AI correctly, and you will gain 1 point.</p>' +
@@ -164,18 +192,19 @@ startButton.onclick = async () => {
             title: 'Trial',
             element: trial,
             intro: '<p>The progress will be shown on the top left.</p>' +
-                '<p>It shows the number of trials completed/total trials.</p>'
+                '<p>It shows the current trial / total trials.</p>'
         }, {
             title: 'Score',
             element: score,
             intro: '<p>Your score will be shown on the top right.</p>' +
-                '<p>It shows the number of correct trials/completed trials.</p>'
+                '<p>It shows the correct trials / completed trials.</p>'
         }, {
             title: 'Start',
             intro: '<p>Let\'s begin the experiment. Earn up to $0.50 bonus!</p>',
         }, {
             title: 'Reminder',
-            intro: '<p>Use the <strong>AI\'s answer and its confidence level</strong> to decide if the AI is correct or wrong.</p>'
+            intro: '<p>Do not use any external AI.</p>' +
+                '<p>Use the <strong>provided AI\'s answer and its confidence level</strong> to decide if the AI is correct or wrong.</p>'
         }]
     }).oncomplete(() => {
         isIntro = false;
@@ -275,7 +304,7 @@ expData.condition = 0
 const dataPath = `data${expData.condition}.json`;
 console.log(expData.condition);
 
-getData().then(() => setData())
+getData().then(() => resetTrial())
 
 trial.textContent = `Trial: 1/${numTrial} (${Math.round(1 / numTrial * 100)}%)`;
 score.textContent = `Score: 0/0 (0%)`;
