@@ -25,9 +25,9 @@ const cat1Clr = "success"
 const cat2Clr = "secondary"
 
 const redirectURL = "https://app.prolific.com/submissions/complete?cc=C1P1YP97"
-const numTrial = 50;
+const numTrial = 30;
 
-const studyId = "ai4nat";
+const studyId = "ai4nat2";
 const dbPath = studyId + '/participantData/' + firebaseUserId + "/";
 
 const expData = {};
@@ -58,6 +58,7 @@ const humanSubmit = document.querySelector('.humanSubmit');
 
 const imageDisplay = document.querySelector('.imageDisplay');
 const questionCat = document.querySelector('.questionCat');
+const questionCnf = document.querySelector('.questionCnf');
 
 // complete
 const complete = document.querySelector(".complete")
@@ -122,9 +123,11 @@ const resetTrial = async () => {
         mainDisplay.classList.replace(`text-bg-${cat1Clr}`, `text-bg-${cat2Clr}`)
     }
 
-    questionCat.textContent = trialData.aiAns;
+    questionCat.textContent = "Thinking...";
     imageDisplay.src = trialData.path;
 
+    await sleep(1000);
+    questionCat.textContent = trialData.aiAns;
     document.getElementById(`ai${trialData.aiCnf}`).checked = true;
 }
 
@@ -171,15 +174,23 @@ startButton.onclick = async () => {
             intro: '<p>Note that the AI is trained on images taken in the lab rather than in the wild.</p>' +
                 '<p>Therefore, it may often be wrong.</p>'
         }, {
-            title: 'Answer',
+            title: 'AI\'s Answer',
             element: aiForm,
             intro: '<p>The AI will give you its answer and confidence.</p>' +
                 '<p>How certain the AI is indicated by its confidence (between 0% and 100%).</p>',
         }, {
+            title: 'AI\'s Prediction',
+            element: questionCat,
+            intro: '<p>The AI\'s species prediction is displayed as a scientific name.</p>'
+        }, {
+            title: 'AI\'s Confidence',
+            element: questionCnf,
+            intro: '<p>0% confidence means the AI is purely guessing; 100% means it\'s certain in its prediction.</p>'
+        }, {
             title: 'Judge',
             element: humanForm,
             intro: '<p>Judge whether the AI\'s answer is correct or wrong.</p>' +
-                '<p>Indicate the confidence in your judgment (between 0% and 100%) and click submit.</p>'
+                '<p>Then click submit.</p>'
         }, {
             title: 'Feedback',
             intro: '<p>Judge the AI correctly, and you will gain 1 point.</p>' +
@@ -224,7 +235,7 @@ humanForm.onsubmit = async event => {
         let humanAns = document.querySelector('input[name="humanAns"]:checked').value;
         trialData.humanAns = humanAns;
 
-        trialData.humanCnf = document.querySelector('input[name="huCnf"]:checked').value;
+        // trialData.humanCnf = document.querySelector('input[name="huCnf"]:checked').value;
 
         let title
         let descr
@@ -256,13 +267,12 @@ humanForm.onsubmit = async event => {
             exitOnEsc: false, exitOnOverlayClick: false, showBullets: false, keyboardNavigation: false, steps: [{
                 title: title, intro: descr
             }]
-        }).oncomplete(() => {
+        }).oncomplete(async () => {
             curTrial++
             trial.textContent = `Trial: ${curTrial}/${numTrial} (${Math.round(curTrial / numTrial * 100)}%)`;
 
             if (curTrial <= numTrial) {
                 resetTrial()
-
             } else {
                 expData.score = curScore;
 

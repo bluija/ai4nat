@@ -92,7 +92,7 @@
 <div class="experiment container-fluid text-center p-3 d-none">
     <nav class="progressDisplay row align-items-center mb-3">
         <h5 class="trial col"></h5>
-        <h3 class="question col"><span class="fs-1 catEmjQ">🐈</span>Species in Photo?</h3>
+        <h3 class="question col">Species in Photo?</h3>
         <h5 class="score col"></h5>
     </nav>
     <div class="mainDisplay row text-bg-success p-3">
@@ -102,7 +102,7 @@
         </div>
         <div class="questionDisplay col-8 p-3">
             <form class="aiForm card mb-3">
-                <h3 class="card-header">AI's Answer: <span
+                <h3 class="card-header">AI's Answer: <span class="fs-1 catEmjQ">🐈</span><span
                         class="questionCat fst-italic">Felis catus</span></h3>
                 <fieldset class="aiField card-body" disabled>
                     <div class="questionCnf">
@@ -146,36 +146,6 @@
                         <input type="radio" class="btn-check" name="humanAns" value="yes" id="humanYes"
                                autocomplete="off">
                         <label class="btn btn-outline-success" for="humanYes">Correct</label>
-                    </div>
-                    <br>
-                    <div class="humanCnf">
-                        <h4 class="promptCnf card-title">Confidence in your judgment (%)?</h4>
-                        <div class="btn-group buttonCnf" role="group">
-                            <input type="radio" class="btn-check" name="huCnf" value="0" id="hu0" autocomplete="off"
-                                   required>
-                            <label class="btn btn-outline-dark" for="hu0">0</label>
-                            <input type="radio" class="btn-check" name="huCnf" value="10" id="hu10" autocomplete="off">
-                            <label class="btn btn-outline-dark" for="hu10">10</label>
-                            <input type="radio" class="btn-check" name="huCnf" value="20" id="hu20" autocomplete="off">
-                            <label class="btn btn-outline-dark" for="hu20">20</label>
-                            <input type="radio" class="btn-check" name="huCnf" value="30" id="hu30" autocomplete="off">
-                            <label class="btn btn-outline-dark" for="hu30">30</label>
-                            <input type="radio" class="btn-check" name="huCnf" value="40" id="hu40" autocomplete="off">
-                            <label class="btn btn-outline-dark" for="hu40">40</label>
-                            <input type="radio" class="btn-check" name="huCnf" value="50" id="hu50" autocomplete="off">
-                            <label class="btn btn-outline-dark" for="hu50">50</label>
-                            <input type="radio" class="btn-check" name="huCnf" value="60" id="hu60" autocomplete="off">
-                            <label class="btn btn-outline-dark" for="hu60">60</label>
-                            <input type="radio" class="btn-check" name="huCnf" value="70" id="hu70" autocomplete="off">
-                            <label class="btn btn-outline-dark" for="hu70">70</label>
-                            <input type="radio" class="btn-check" name="huCnf" value="80" id="hu80" autocomplete="off">
-                            <label class="btn btn-outline-dark" for="hu80">80</label>
-                            <input type="radio" class="btn-check" name="huCnf" value="90" id="hu90" autocomplete="off">
-                            <label class="btn btn-outline-dark" for="hu90">90</label>
-                            <input type="radio" class="btn-check" name="huCnf" value="100" id="hu100"
-                                   autocomplete="off">
-                            <label class="btn btn-outline-dark" for="hu100">100</label>
-                        </div>
                     </div>
                     <button type="submit" class="btn btn-lg btn-secondary humanSubmit mt-3" disabled>Submit</button>
                 </fieldset>
