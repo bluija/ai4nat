@@ -185,7 +185,7 @@ startButton.onclick = async () => {
         }, {
             title: 'AI\'s Confidence',
             element: questionCnf,
-            intro: '<p>0% confidence means the AI is purely guessing; 100% means it\'s certain in its prediction.</p>'
+            intro: '<p>0% confidence means the AI is purely guessing; 100% means it\'s totally certain in its prediction.</p>'
         }, {
             title: 'Judge',
             element: humanForm,
